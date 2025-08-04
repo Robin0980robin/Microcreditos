@@ -1,26 +1,32 @@
+// hooks/useUser.ts
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
 
 export const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (error) {
-        console.error("Error fetching user:", error.message);
-      } else {
-        setUser(data.user); // data.user puede ser User o null
+      if (user) {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (!error) {
+          setUser({ ...user, profile });
+        }
       }
-
-      setLoading(false);
     };
 
-    getUser();
+    fetchUser();
   }, []);
 
-  return { user, loading };
+  return { user };
 };

@@ -34,6 +34,13 @@ const SolicitarPrestamo = () => {
     category: ""
   });
 
+  const [errors, setErrors] = useState({
+    amount: "",
+    purpose: "",
+    term: "",
+    category: ""
+  });
+
   const categories = [
     "Negocio/Inventario",
     "Educación",
@@ -52,38 +59,48 @@ const SolicitarPrestamo = () => {
     { value: "12", label: "12 meses" }
   ];
 
+  const validate = () => {
+    const newErrors: any = {};
+    if (!formData.amount) newErrors.amount = "Este campo es obligatorio";
+    else if (parseFloat(formData.amount) < 50 || parseFloat(formData.amount) > 5000)
+      newErrors.amount = "El monto debe estar entre $50 y $5000";
+
+    if (!formData.category) newErrors.category = "Selecciona una categoría";
+
+    if (!formData.purpose) newErrors.purpose = "Este campo es obligatorio";
+
+    if (!formData.term) newErrors.term = "Selecciona un plazo";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.amount || !formData.purpose || !formData.term || !formData.category) {
-      toast({
-        title: "Error",
-        description: "Por favor completa todos los campos requeridos",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!validate()) return;
 
     const confirmed = window.confirm("¿Estás seguro de enviar esta solicitud de préstamo?");
     if (!confirmed) return;
 
-    if (!user) {
+    if (!user || !user.profile?.group_id) {
       toast({
-        title: "Error de autenticación",
-        description: "Debes iniciar sesión para enviar una solicitud.",
+        title: "Error de autenticación o grupo",
+        description: "Debes iniciar sesión y tener un grupo asignado para enviar una solicitud.",
         variant: "destructive"
       });
       return;
     }
 
-    const { error } = await supabase.from("prestamos").insert({
+    const { error } = await supabase.from("solicitudes").insert({
       user_id: user.id,
+      group_id: user.profile.group_id, // ✅ Se añade aquí
       amount: parseFloat(formData.amount),
       purpose: formData.purpose,
       term: parseInt(formData.term),
       category: formData.category,
       description: formData.description,
-      status: "pendiente"
+      status: "pendiente",
+      created_at: new Date().toISOString()
     });
 
     if (error) {
@@ -105,6 +122,12 @@ const SolicitarPrestamo = () => {
         description: "",
         category: ""
       });
+      setErrors({
+        amount: "",
+        purpose: "",
+        term: "",
+        category: ""
+      });
     }
   };
 
@@ -119,6 +142,11 @@ const SolicitarPrestamo = () => {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Solicitar Préstamo</h1>
+        {user?.profile?.group_id && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Grupo solidario asignado: <strong>{user.profile.group_id}</strong>
+          </p>
+        )}
         <p className="text-muted-foreground">
           Completa el formulario para solicitar un préstamo al grupo solidario
         </p>
@@ -136,32 +164,29 @@ const SolicitarPrestamo = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Amount */}
-            <div className="space-y-2">
+
+            {/* Monto */}
+            <div className="space-y-1">
               <Label htmlFor="amount">Monto solicitado *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="0.00"
                   className="pl-8"
+                  placeholder="0.00"
                   value={formData.amount}
                   onChange={(e) =>
                     setFormData({ ...formData, amount: e.target.value })
                   }
-                  min="50"
-                  max="5000"
-                  step="0.01"
                 />
               </div>
+              {errors.amount && <p className="text-sm text-red-500">{errors.amount}</p>}
               <p className="text-xs text-muted-foreground">Rango: $50 - $5,000</p>
             </div>
 
-            {/* Category */}
-            <div className="space-y-2">
+            {/* Categoría */}
+            <div className="space-y-1">
               <Label htmlFor="category">Categoría *</Label>
               <Select
                 value={formData.category}
@@ -180,10 +205,11 @@ const SolicitarPrestamo = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
             </div>
 
-            {/* Purpose */}
-            <div className="space-y-2">
+            {/* Propósito */}
+            <div className="space-y-1">
               <Label htmlFor="purpose">Propósito del préstamo *</Label>
               <Input
                 id="purpose"
@@ -192,15 +218,15 @@ const SolicitarPrestamo = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, purpose: e.target.value })
                 }
-                maxLength={100}
               />
+              {errors.purpose && <p className="text-sm text-red-500">{errors.purpose}</p>}
               <p className="text-xs text-muted-foreground">
                 {formData.purpose.length}/100 caracteres
               </p>
             </div>
 
-            {/* Term */}
-            <div className="space-y-2">
+            {/* Plazo */}
+            <div className="space-y-1">
               <Label htmlFor="term">Plazo de pago *</Label>
               <Select
                 value={formData.term}
@@ -219,14 +245,15 @@ const SolicitarPrestamo = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.term && <p className="text-sm text-red-500">{errors.term}</p>}
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
+            {/* Descripción */}
+            <div className="space-y-1">
               <Label htmlFor="description">Descripción detallada (opcional)</Label>
               <Textarea
                 id="description"
-                placeholder="Proporciona más detalles sobre cómo utilizarás el préstamo y cómo planeas pagarlo..."
+                placeholder="Proporciona más detalles sobre cómo utilizarás el préstamo..."
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -239,7 +266,7 @@ const SolicitarPrestamo = () => {
               </p>
             </div>
 
-            {/* Resumen */}
+            {/* Resumen de Pagos */}
             {formData.amount && formData.term && (
               <Card className="bg-muted/50">
                 <CardHeader className="pb-3">
@@ -267,7 +294,7 @@ const SolicitarPrestamo = () => {
               </Card>
             )}
 
-            {/* Info Alert */}
+            {/* Info */}
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="pt-6">
                 <div className="flex gap-3">
@@ -284,7 +311,7 @@ const SolicitarPrestamo = () => {
               </CardContent>
             </Card>
 
-            {/* Submit */}
+            {/* Enviar */}
             <Button type="submit" className="w-full" size="lg">
               <FileText className="mr-2 h-4 w-4" />
               Enviar Solicitud
