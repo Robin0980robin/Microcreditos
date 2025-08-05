@@ -53,9 +53,23 @@ const Reportes = () => {
       const toISO = range.to.toISOString();
 
       const [{ count: solicitados }, { count: aprobados }, { count: rechazados }] = await Promise.all([
-        supabase.from("solicitudes").select("*", { count: "exact", head: true }).gte("created_at", fromISO).lte("created_at", toISO),
-        supabase.from("solicitudes").select("*", { count: "exact", head: true }).eq("estado", "aprobado").gte("created_at", fromISO).lte("created_at", toISO),
-        supabase.from("solicitudes").select("*", { count: "exact", head: true }).eq("estado", "rechazado").gte("created_at", fromISO).lte("created_at", toISO),
+        supabase
+          .from("prestamos")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", fromISO)
+          .lte("created_at", toISO),
+        supabase
+          .from("prestamos")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "approved")
+          .gte("created_at", fromISO)
+          .lte("created_at", toISO),
+        supabase
+          .from("prestamos")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "rejected")
+          .gte("created_at", fromISO)
+          .lte("created_at", toISO),
       ]);
 
       const { data: prestamos } = await supabase
@@ -68,11 +82,18 @@ const Reportes = () => {
       const montoPagado = prestamos?.reduce((acc, p) => acc + p.pagado, 0) || 0;
       const montoPendiente = montoPrestado - montoPagado;
 
-      const { count: votosPositivos } = await supabase.from("votos").select("*", { count: "exact", head: true }).eq("vote", true);
-      const { count: votosNegativos } = await supabase.from("votos").select("*", { count: "exact", head: true }).eq("vote", false);
+      const { count: votosPositivos } = await supabase
+        .from("votos")
+        .select("*", { count: "exact", head: true })
+        .eq("vote", true);
+
+      const { count: votosNegativos } = await supabase
+        .from("votos")
+        .select("*", { count: "exact", head: true })
+        .eq("vote", false);
 
       const historico: Record<string, number> = {};
-      prestamos?.forEach(p => {
+      prestamos?.forEach((p) => {
         const mes = format(new Date(p.created_at), "MMM yyyy");
         historico[mes] = (historico[mes] || 0) + 1;
       });
@@ -107,9 +128,11 @@ const Reportes = () => {
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array(6).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-2xl" />
-          ))}
+          {Array(6)
+            .fill(0)
+            .map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
         </div>
       ) : (
         <>
@@ -176,7 +199,9 @@ const Reportes = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="rounded-2xl">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-4 flex items-center gap-2"><BarChart2 className="w-5 h-5" /> Préstamos por mes</h3>
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <BarChart2 className="w-5 h-5" /> Préstamos por mes
+                </h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={resumen.historico}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -191,13 +216,15 @@ const Reportes = () => {
 
             <Card className="rounded-2xl">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-4 flex items-center gap-2"><PieChart className="w-5 h-5" /> Votos por préstamo</h3>
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <PieChart className="w-5 h-5" /> Votos por préstamo
+                </h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <RePieChart>
                     <Pie
                       data={[
                         { name: "Positivos", value: resumen.votosPositivos },
-                        { name: "Negativos", value: resumen.votosNegativos }
+                        { name: "Negativos", value: resumen.votosNegativos },
                       ]}
                       dataKey="value"
                       cx="50%"

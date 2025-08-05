@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-
+import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,7 +23,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [fullName, setFullName] = useState<string | null>(null);
+  const [fullName, setFullName] = useState <string | null>(null);
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -41,10 +42,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: "Solicitar Préstamo", href: "/solicitar", icon: DollarSign },
     { name: "Mis Solicitudes", href: "/solicitudes", icon: FileText },
     { name: "Calendario de Pagos", href: "/calendario", icon: Calendar },
-    { name: "Grupo Solidario", href: "/grupo", icon: Users },
+    user?.profile?.role === "grupo_solidario" && {
+      name: "Grupo Solidario",
+      href: "/grupo",
+      icon: Users,
+    },
     { name: "Reportes", href: "/reportes", icon: BarChart3 },
     { name: "Mi Perfil", href: "/perfil", icon: User },
-  ];
+  ].filter(Boolean); // elimina entradas falsas si el usuario no es grupo_solidario
 
   const isActive = (href: string) => location.pathname === href;
 

@@ -54,7 +54,22 @@ const GrupoSolidario = () => {
   const fetchSolicitudes = async (status: string) => {
     setLoadingSolicitudes(true);
 
-    let query = supabase.from("prestamos").select("*").order("id", { ascending: false });
+    if (!user?.profile?.group_id) {
+      toast({
+        title: "Error",
+        description: "No tienes un grupo asignado",
+        variant: "destructive",
+      });
+      setLoadingSolicitudes(false);
+      return;
+    }
+
+    let query = supabase
+      .from("prestamos")
+      .select("*")
+      .eq("group_id", user.profile.group_id)
+      .order("id", { ascending: false });
+
     if (status !== "all") {
       query = query.eq("status", status);
     }
@@ -118,6 +133,15 @@ const GrupoSolidario = () => {
   const votar = async (vote: boolean) => {
     if (!selectedSolicitud || !user) {
       toast({ title: "Error", description: "Usuario o solicitud no disponible", variant: "destructive" });
+      return;
+    }
+
+    if (selectedSolicitud.user_id === user.id) {
+      toast({
+        title: "No permitido",
+        description: "No puedes votar en tu propia solicitud",
+        variant: "destructive",
+      });
       return;
     }
 
