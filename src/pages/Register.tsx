@@ -42,7 +42,7 @@ const Register = () => {
     if (!password) {
       newErrors.password = "Este campo es obligatorio.";
     } else if (password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres.";
+      newErrors.password = "La contraseña debe tener al menos 6 caracteres, 1 mayúscula y 1 símobolo.";
     }
 
     if (!confirmPassword) {

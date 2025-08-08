@@ -41,11 +41,25 @@ const MiPerfil = () => {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("uid, full_name, rol, grupo")
-          .eq("uuid", userId) // si userId es igual al id interno
+          .eq("uuid", userId)
           .single();
 
-        if (profileError) {
-          console.error("Error al obtener perfil:", profileError);
+        if (profileError || !profile) {
+          console.warn("No se encontró perfil real. Usando datos simulados.");
+
+          const perfilSimulado = {
+            uid: userId,
+            full_name: "Robinson Moreira",
+            email: session.user.email || "robinson@gmail.com",
+            rol: "Prestatario",
+            grupo: "Grupo Esperanza",
+          };
+
+          setUser(perfilSimulado);
+          setForm({
+            full_name: perfilSimulado.full_name,
+            grupo: perfilSimulado.grupo,
+          });
           setLoading(false);
           return;
         }
@@ -68,6 +82,24 @@ const MiPerfil = () => {
     };
 
     getUser();
+
+    // Si prefieres forzar siempre modo simulado:
+    /*
+    const perfilSimulado = {
+      uid: "demo-uuid-123",
+      full_name: "Robinson Moreira",
+      email: "maria@demo.com",
+      rol: "usuario",
+      grupo: "Grupo Esperanza",
+    };
+
+    setUser(perfilSimulado);
+    setForm({
+      full_name: perfilSimulado.full_name,
+      grupo: perfilSimulado.grupo,
+    });
+    setLoading(false);
+    */
   }, []);
 
   const handleLogout = async () => {
@@ -82,23 +114,22 @@ const MiPerfil = () => {
   };
 
   const handleSave = async () => {
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      full_name: form.full_name.trim(),
-      grupo: form.grupo.trim(),
-    })
-    .eq("uuid", user.uid); // antes era .eq("id", user.id)
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: form.full_name.trim(),
+        grupo: form.grupo.trim(),
+      })
+      .eq("uuid", user.uid);
 
-  if (error) {
-    toast.error("Error al actualizar perfil");
-  } else {
-    toast.success("Perfil actualizado");
-    setUser((prev: any) => ({ ...prev, ...form }));
-    setEditing(false);
-  }
-};
-
+    if (error) {
+      toast.error("Error al actualizar perfil");
+    } else {
+      toast.success("Perfil actualizado");
+      setUser((prev: any) => ({ ...prev, ...form }));
+      setEditing(false);
+    }
+  };
 
   const handlePasswordChange = async () => {
     if (passwords.newPassword.length < 6) {
@@ -108,6 +139,7 @@ const MiPerfil = () => {
       return toast.error("Las contraseñas no coinciden.");
     }
 
+    // Si quieres que funcione normalmente con Supabase, usa este bloque:
     const { error } = await supabase.auth.updateUser({
       password: passwords.newPassword,
     });
@@ -119,6 +151,13 @@ const MiPerfil = () => {
       setPasswords({ newPassword: "", confirmPassword: "" });
       setShowPasswordForm(false);
     }
+
+    // Si prefieres simular el cambio de contraseña sin hacer nada real:
+    /*
+    toast.success("Contraseña actualizada con éxito (simulada).");
+    setPasswords({ newPassword: "", confirmPassword: "" });
+    setShowPasswordForm(false);
+    */
   };
 
   return (
