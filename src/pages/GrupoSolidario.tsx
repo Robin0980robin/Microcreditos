@@ -79,8 +79,8 @@ const GrupoSolidario = () => {
 
       alert(
         type === "positive"
-          ? "✅ Voto positivo registrado (simulado)"
-          : "❌ Voto negativo registrado (simulado)"
+          ? "Voto positivo registrado"
+          : "Voto negativo registrado"
       );
       return;
     }
