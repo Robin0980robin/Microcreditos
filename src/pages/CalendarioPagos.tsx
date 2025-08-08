@@ -26,8 +26,35 @@ const CalendarioPagos = () => {
 
       if (error) {
         console.error("Error al obtener pagos:", error.message);
+      }
+
+      // Si no hay datos en la base, usar datos simulados
+      if (!data || data.length === 0) {
+        setPagos([
+          {
+            id: "1",
+            monto: 120.5,
+            fecha_pago: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 días después
+            estado: "pendiente",
+            prestamo_id: "PR-001",
+          },
+          {
+            id: "2",
+            monto: 80,
+            fecha_pago: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 día antes
+            estado: "atrasado",
+            prestamo_id: "PR-002",
+          },
+          {
+            id: "3",
+            monto: 200,
+            fecha_pago: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 días antes
+            estado: "pagado",
+            prestamo_id: "PR-003",
+          },
+        ]);
       } else {
-        setPagos(data || []);
+        setPagos(data);
       }
     };
 

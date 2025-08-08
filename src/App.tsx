@@ -85,7 +85,7 @@ const App = () => {
               }
             />
             <Route
-              path="/grupo"
+              path="/grupo-solidario"
               element={
                 <Layout>
                   <GrupoSolidario />

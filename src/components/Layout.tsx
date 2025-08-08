@@ -42,14 +42,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: "Solicitar Préstamo", href: "/solicitar", icon: DollarSign },
     { name: "Mis Solicitudes", href: "/solicitudes", icon: FileText },
     { name: "Calendario de Pagos", href: "/calendario", icon: Calendar },
-    user?.profile?.role === "grupo_solidario" && {
-      name: "Grupo Solidario",
-      href: "/grupo",
-      icon: Users,
-    },
+    { name: "Grupo Solidario",  label: "Grupo Solidario", icon: Users, href: "/grupo-solidario" },
     { name: "Reportes", href: "/reportes", icon: BarChart3 },
     { name: "Mi Perfil", href: "/perfil", icon: User },
-  ].filter(Boolean); // elimina entradas falsas si el usuario no es grupo_solidario
+  ].filter(Boolean);
 
   const isActive = (href: string) => location.pathname === href;
 

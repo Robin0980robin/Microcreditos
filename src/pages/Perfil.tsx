@@ -38,11 +38,10 @@ const MiPerfil = () => {
         }
 
         const userId = session.user.id;
-
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("id, full_name, rol, grupo")
-          .eq("uuid", userId)
+          .select("uid, full_name, rol, grupo")
+          .eq("uuid", userId) // si userId es igual al id interno
           .single();
 
         if (profileError) {
@@ -83,22 +82,23 @@ const MiPerfil = () => {
   };
 
   const handleSave = async () => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: form.full_name.trim(),
-        grupo: form.grupo.trim(),
-      })
-      .eq("id", user.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: form.full_name.trim(),
+      grupo: form.grupo.trim(),
+    })
+    .eq("uuid", user.uid); // antes era .eq("id", user.id)
 
-    if (error) {
-      toast.error("Error al actualizar perfil");
-    } else {
-      toast.success("Perfil actualizado");
-      setUser((prev: any) => ({ ...prev, ...form }));
-      setEditing(false);
-    }
-  };
+  if (error) {
+    toast.error("Error al actualizar perfil");
+  } else {
+    toast.success("Perfil actualizado");
+    setUser((prev: any) => ({ ...prev, ...form }));
+    setEditing(false);
+  }
+};
+
 
   const handlePasswordChange = async () => {
     if (passwords.newPassword.length < 6) {

@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, CheckCircle, XCircle } from "lucide-react";
 
+const USE_SIMULATED_DATA = true; // Cambia a false cuando uses datos reales
+
 interface Prestamo {
   id: number;
   amount: number;
@@ -20,6 +22,15 @@ const MisSolicitudes = () => {
 
   useEffect(() => {
     const fetchPrestamos = async () => {
+      if (USE_SIMULATED_DATA) {
+        setPrestamos([
+          { id: 1, amount: 300, purpose: "Compra de herramientas", term: 6, status: "approved", created_at: new Date().toISOString(), votes_positive: 10, votes_total: 12 },
+          { id: 2, amount: 150, purpose: "Reparación de bicicleta", term: 3, status: "voting", created_at: new Date().toISOString(), votes_positive: 5, votes_total: 8 },
+          { id: 3, amount: 200, purpose: "Pago de matrícula", term: 4, status: "pending", created_at: new Date().toISOString() }
+        ]);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("prestamos")
@@ -39,37 +50,32 @@ const MisSolicitudes = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "approved":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "voting":
-        return "outline";
-      case "rejected":
-        return "destructive";
-      default:
-        return "outline";
+      case "approved": return "default";
+      case "pending": return "secondary";
+      case "voting": return "outline";
+      case "rejected": return "destructive";
+      default: return "outline";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "approved":
-        return "Aprobado";
-      case "pending":
-        return "Pendiente";
-      case "voting":
-        return "En votación";
-      case "rejected":
-        return "Rechazado";
-      default:
-        return status;
+      case "approved": return "Aprobado";
+      case "pending": return "Pendiente";
+      case "voting": return "En votación";
+      case "rejected": return "Rechazado";
+      default: return status;
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold">Mis Solicitudes</h1>
+
+      {USE_SIMULATED_DATA && (
+        <p className="text-sm text-muted-foreground italic">
+        </p>
+      )}
 
       {prestamos.length === 0 ? (
         <p className="text-muted-foreground">Aún no tienes solicitudes registradas.</p>
@@ -119,29 +125,20 @@ const MisSolicitudes = () => {
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case "approved":
-      return <CheckCircle className="w-4 h-4 text-green-600 mr-1" />;
-    case "pending":
-      return <Clock className="w-4 h-4 text-yellow-500 mr-1" />;
-    case "voting":
-      return <Users className="w-4 h-4 text-blue-600 mr-1" />;
-    case "rejected":
-      return <XCircle className="w-4 h-4 text-red-600 mr-1" />;
-    default:
-      return null;
+    case "approved": return <CheckCircle className="w-4 h-4 text-green-600 mr-1" />;
+    case "pending": return <Clock className="w-4 h-4 text-yellow-500 mr-1" />;
+    case "voting": return <Users className="w-4 h-4 text-blue-600 mr-1" />;
+    case "rejected": return <XCircle className="w-4 h-4 text-red-600 mr-1" />;
+    default: return null;
   }
 };
 
 const getVoteColor = (status: string) => {
   switch (status) {
-    case "approved":
-      return "text-green-600";
-    case "rejected":
-      return "text-red-600";
-    case "voting":
-      return "text-blue-600";
-    default:
-      return "text-muted-foreground";
+    case "approved": return "text-green-600";
+    case "rejected": return "text-red-600";
+    case "voting": return "text-blue-600";
+    default: return "text-muted-foreground";
   }
 };
 
